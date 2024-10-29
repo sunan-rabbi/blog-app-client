@@ -1,37 +1,59 @@
 "use client"
-import React, { FormEvent } from 'react';
+import React, { useEffect } from 'react';
 import '../register/register.css'
-import { gql } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client';
+import { useRouter } from 'next/navigation';
 
-const signin = gql`
+const SIGNIN = gql`
     mutation login($email: String!, $password: String!){
         signin(email: $email, password: $password) {
           message
           token
         }
     }
-`
+`;
 
 const Signin = () => {
-    const handleRegister = (e: any) => {
+    const router = useRouter();
+    const [signin, { data, loading, error }] = useMutation(SIGNIN);
+
+    // Handle form submission
+    const handleRegister = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const data = {
-            email: e.target.email.value,
-            password: e.target.password.value,
+        const formData = {
+            email: e.currentTarget.email.value,
+            password: e.currentTarget.password.value,
+        };
+        signin({ variables: formData });
+    };
+
+    // Redirect on successful login
+    useEffect(() => {
+        if (data?.signin?.token) {
+            const { token } = data.signin;
+            localStorage.setItem("accessToken", token);
+            router.push('/blogs');
         }
-        console.log("data: ", data)
-    }
+    }, [data, router]);
 
     return (
         <div className="form">
             <form onSubmit={handleRegister}>
+                <label htmlFor="email">Your Email</label>
+                <input name="email" type="email" required />
 
-                <label htmlFor="">Your Email</label>
-                <input name="email" type="email" />
-                <label htmlFor="">Your Password</label>
-                <input name="password" type="password" />
+                <label htmlFor="password">Your Password</label>
+                <input name="password" type="password" required />
 
-                <button className='rounded-full p-2 bg-white text-black'>Login</button>
+                <button
+                    type="submit"
+                    className="rounded-full p-2 bg-white text-black"
+                    disabled={loading}
+                >
+                    {loading ? 'Submitting...' : 'Login'}
+                </button>
+
+                {error && <p className="error">Submission error! {error.message}</p>}
             </form>
         </div>
     );
