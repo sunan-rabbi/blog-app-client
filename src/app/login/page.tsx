@@ -1,6 +1,16 @@
 "use client"
 import React, { FormEvent } from 'react';
 import '../register/register.css'
+import { gql } from '@apollo/client';
+
+const signin = gql`
+    mutation login($email: String!, $password: String!){
+        signin(email: $email, password: $password) {
+          message
+          token
+        }
+    }
+`
 
 const Signin = () => {
     const handleRegister = (e: any) => {
